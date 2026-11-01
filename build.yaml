@@ -1,0 +1,20 @@
+name: "Media Organizer"
+guid: "9eb40cfc-85d4-4445-88de-21bb90c60a7c"
+version: "1.0.0.0"
+targetAbi: "12.1.0.0"
+framework: "net10.0"
+owner: "NeN"
+overview: "Normaliza automáticamente nombres de series y películas para el scrapeo de metadatos."
+description: >
+  Vigila carpetas configuradas (por ejemplo la raíz de Series o de Películas) y,
+  cuando entra contenido nuevo, renombra y reorganiza los ficheros al esquema que
+  Jellyfin necesita para obtener metadatos: 'Serie/Temporada N/Serie SxxEyy.ext'
+  para episodios y 'Película (año)/Película (año).ext' para películas.
+  Limpia etiquetas de trackers ([www.ejemplo.org], [TGx], grupos de release),
+  mueve los archivos adjuntos (-thumb, subtítulos, .trickplay) y elimina la
+  basura (.url, .txt de trackers, carpetas Screens/Sample).
+category: "General"
+artifacts:
+  - "Jellyfin.Plugin.MediaOrganizer.dll"
+changelog: |-
+  - Versión inicial

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Media Organizer</title>
+</head>
+
+<body>
+    <div id="MediaOrganizerConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+        data-require="emby-input,emby-button,emby-toggle,emby-textarea,emby-checkbox,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="MediaOrganizerConfigForm">
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkEnabled" />
+                            <span>Organizador activo</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Vigila las carpetas y normaliza automáticamente el contenido nuevo.
+                        </div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkDryRun" />
+                            <span>Modo simulación (dry-run)</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Solo escribe en el log lo que haría, sin tocar el disco. Úsalo para probar tus ajustes.
+                        </div>
+                    </div>
+
+                    <h3 class="checkboxListLabel">Bibliotecas de Jellyfin</h3>
+                    <div class="fieldDescription">
+                        Marca las bibliotecas a vigilar; se organizan todas sus rutas físicas.
+                        Elige a la derecha si el contenido es de series o de películas.
+                    </div>
+                    <div id="libraryList" class="checkboxList paperList"
+                        style="padding: .5em 1em 1em; margin: .5em 0;">
+                    </div>
+
+                    <h3 class="checkboxListLabel">Carpetas adicionales</h3>
+                    <div class="fieldDescription">
+                        Rutas sueltas que no pertenezcan a una biblioteca.
+                    </div>
+                    <div id="pathList" style="margin: .5em 0;"></div>
+                    <button is="emby-button" type="button" id="btnAddPath" class="raised button-edit">
+                        <span>Añadir carpeta</span>
+                    </button>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="txtSeasonFormat"
+                            label="Formato de carpeta de temporada" />
+                        <div class="fieldDescription">
+                            {0} = número de temporada, {0:00} = con dos dígitos. Ejemplos: "Temporada {0}", "Season {0:00}".
+                        </div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="txtEpisodeFormat"
+                            label="Formato de nombre de episodio" />
+                        <div class="fieldDescription">
+                            Tokens: {show} {ss} {ee} (con cero) {s} {e} (sin cero). Ej.: "{show} S{ss}E{ee}".
+                        </div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="txtMovieFormat"
+                            label="Formato de nombre de película" />
+                        <div class="fieldDescription">
+                            Tokens: {title} {year}. Sin año en el nombre se usa solo {title}.
+                        </div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="numSettle" min="5"
+                            label="Segundos de espera antes de organizar" />
+                        <div class="fieldDescription">
+                            Tiempo sin cambios antes de procesar lo nuevo (evita tocar descargas a medias). Mínimo 5.
+                        </div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="numMinSize" min="0"
+                            label="Tamaño mínimo de vídeo (MB)" />
+                    </div>
+
+                    <h3 class="checkboxListLabel">Limpieza y adjuntos</h3>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkDeleteJunk" />
+                            <span>Eliminar ficheros basura</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkDeleteNfo" />
+                            <span>Eliminar .nfo de episodios</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Útil si los .nfo traídos tienen metadatos obsoletos que impiden un scrapeo limpio.
+                        </div>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkDeletePosters" />
+                            <span>Eliminar "-poster.jpg" de episodios</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkKeepThumbs" />
+                            <span>Conservar "-thumb.jpg" renombrados</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkKeepTrickplay" />
+                            <span>Conservar carpetas ".trickplay"</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkRenameSubs" />
+                            <span>Renombrar subtítulos junto al vídeo</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-toggle" type="checkbox" id="chkQueueScan" />
+                            <span>Lanzar escaneo de biblioteca tras organizar</span>
+                        </label>
+                    </div>
+
+                    <h3 class="checkboxListLabel">Ficheros basura que se eliminan</h3>
+                    <div class="fieldDescription">
+                        Patrones (regex) de nombres de fichero a borrar. Ejemplos: <code>\.url$</code> borra
+                        los accesos directos, <code>(?i)torrent.*\.txt$</code> los txt de trackers.
+                    </div>
+                    <div id="edJunkPatterns"></div>
+
+                    <h3 class="checkboxListLabel">Carpetas basura que se eliminan</h3>
+                    <div class="fieldDescription">
+                        Nombres de carpetas a borrar enteras (típicas de releases: Screens, Sample…).
+                    </div>
+                    <div id="edJunkDirs"></div>
+
+                    <h3 class="checkboxListLabel">Texto que se quita de los nombres</h3>
+                    <div class="fieldDescription">
+                        Patrones (regex) que se recortan al limpiar títulos: etiquetas como
+                        [www.ejemplo.org], calidades (HDTV, 1080p), idiomas o grupos de release.
+                    </div>
+                    <div id="edStripPatterns"></div>
+
+                    <h3 class="checkboxListLabel">Extensiones de vídeo</h3>
+                    <div class="fieldDescription">
+                        Ficheros que se consideran vídeo (sin punto). Ejemplo: mkv
+                    </div>
+                    <div id="edVideoExt"></div>
+
+                    <h3 class="checkboxListLabel">Extensiones de subtítulos</h3>
+                    <div class="fieldDescription">
+                        Ficheros de subtítulos que se renombran junto al vídeo (sin punto). Ejemplo: srt
+                    </div>
+                    <div id="edSubExt"></div>
+
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Guardar</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var MediaOrganizerConfig = {
+                pluginUniqueId: '9eb40cfc-85d4-4445-88de-21bb90c60a7c'
+            };
+
+            var tagEditors = {};
+
+            // ---------- Editor de etiquetas reutilizable ----------
+            function createTagEditor(containerId, opts) {
+                var container = document.getElementById(containerId);
+                var items = [];
+                container.innerHTML = '';
+
+                var list = document.createElement('div');
+                list.className = 'paperList';
+                list.style.cssText = 'padding:.3em .8em;margin:.4em 0;max-height:14em;overflow-y:auto;';
+                container.appendChild(list);
+
+                var addRow = document.createElement('div');
+                addRow.style.cssText = 'display:flex;gap:.6em;align-items:flex-end;';
+                addRow.innerHTML =
+                    '<div class="inputContainer" style="flex:1;margin:0;">'
+                    + '<input is="emby-input" type="text" class="newItem" label="' + opts.addLabel + '" />'
+                    + '</div>'
+                    + '<button is="emby-button" type="button" class="raised btnAddItem">'
+                    + '<span>Añadir</span></button>';
+                container.appendChild(addRow);
+
+                function render() {
+                    if (items.length === 0) {
+                        list.innerHTML = '<div class="fieldDescription" style="padding:.4em 0;">'
+                            + 'Sin elementos.</div>';
+                        return;
+                    }
+                    list.innerHTML = '';
+                    items.forEach(function (item, idx) {
+                        var row = document.createElement('div');
+                        row.style.cssText = 'display:flex;align-items:center;gap:.6em;padding:.25em 0;';
+                        var text = document.createElement('span');
+                        text.style.cssText = 'flex:1;font-family:monospace;font-size:.9em;word-break:break-all;';
+                        text.textContent = item;
+                        var btn = document.createElement('button');
+                        btn.setAttribute('is', 'emby-button');
+                        btn.setAttribute('type', 'button');
+                        btn.className = 'raised';
+                        btn.style.cssText = 'min-width:auto;padding:0 .6em;';
+                        btn.innerHTML = '<span>✕</span>';
+                        btn.addEventListener('click', function () {
+                            items.splice(idx, 1);
+                            render();
+                        });
+                        row.appendChild(text);
+                        row.appendChild(btn);
+                        list.appendChild(row);
+                    });
+                }
+
+                function add() {
+                    var input = addRow.querySelector('.newItem');
+                    var v = input.value.trim();
+                    if (v.length > 0 && items.indexOf(v) < 0) {
+                        items.push(v);
+                        input.value = '';
+                        render();
+                    }
+                }
+
+                addRow.querySelector('.btnAddItem').addEventListener('click', add);
+                addRow.querySelector('.newItem').addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        add();
+                    }
+                });
+
+                render();
+
+                return {
+                    getItems: function () { return items.slice(); },
+                    setItems: function (arr) { items = (arr || []).slice(); render(); }
+                };
+            }
+
+            function initEditors() {
+                tagEditors.junkPatterns = createTagEditor('edJunkPatterns',
+                    { addLabel: 'Nuevo patrón, ej.: \\.url$' });
+                tagEditors.junkDirs = createTagEditor('edJunkDirs',
+                    { addLabel: 'Nombre de carpeta, ej.: Screens' });
+                tagEditors.stripPatterns = createTagEditor('edStripPatterns',
+                    { addLabel: 'Nuevo patrón regex' });
+                tagEditors.videoExt = createTagEditor('edVideoExt',
+                    { addLabel: 'Extensión, ej.: mkv' });
+                tagEditors.subExt = createTagEditor('edSubExt',
+                    { addLabel: 'Extensión, ej.: srt' });
+            }
+
+            // ---------- Bibliotecas ----------
+            function kindFromCollectionType(ct) {
+                return ct === 'movies' ? 1 : 0;
+            }
+
+            function libraryRow(lib, watched) {
+                var current = watched.filter(function (w) { return w.LibraryName === lib.Name; })[0];
+                var kind = current ? current.Kind : kindFromCollectionType(lib.CollectionType);
+                var checked = current ? ' checked' : '';
+                var type = lib.CollectionType ? ' (' + lib.CollectionType + ')' : '';
+                return '<div class="libraryRow" style="display:flex;align-items:center;gap:1em;padding:.3em 0;">'
+                    + '<div class="checkboxContainer" style="flex:1;margin:0;"><label>'
+                    + '<input is="emby-checkbox" type="checkbox" class="chkLibrary" data-name="'
+                    + lib.Name.replace(/"/g, '&quot;') + '"' + checked + ' />'
+                    + '<span>' + lib.Name + type + '</span></label></div>'
+                    + '<select is="emby-select" class="kindSelect emby-select-withcolor emby-select" style="width:auto;min-width:8em;">'
+                    + '<option value="0"' + (kind === 0 ? ' selected' : '') + '>Series</option>'
+                    + '<option value="1"' + (kind === 1 ? ' selected' : '') + '>Películas</option>'
+                    + '</select></div>';
+            }
+
+            function renderLibraries(container, libraries, watched) {
+                if (!libraries || libraries.length === 0) {
+                    container.innerHTML = '<div class="fieldDescription">No se encontraron bibliotecas.</div>';
+                    return;
+                }
+                container.innerHTML = libraries.map(function (lib) {
+                    return libraryRow(lib, watched || []);
+                }).join('');
+            }
+
+            // ---------- Rutas adicionales ----------
+            function addPathRow(container, path, kind) {
+                var row = document.createElement('div');
+                row.className = 'watchPathRow';
+                row.style.cssText = 'display:flex;align-items:center;gap:.5em;margin-bottom:.5em;';
+                row.innerHTML =
+                    '<input is="emby-input" type="text" class="pathInput emby-input" label="Ruta" style="flex:1;" />'
+                    + '<select is="emby-select" class="kindSelect emby-select-withcolor emby-select" style="width:auto;min-width:8em;">'
+                    + '<option value="0"' + (kind === 0 ? ' selected' : '') + '>Series</option>'
+                    + '<option value="1"' + (kind === 1 ? ' selected' : '') + '>Películas</option>'
+                    + '</select>'
+                    + '<button is="emby-button" type="button" class="btnRemovePath raised">'
+                    + '<span>Quitar</span></button>';
+                row.querySelector('.pathInput').value = path || '';
+                row.querySelector('.btnRemovePath').addEventListener('click', function () {
+                    row.remove();
+                });
+                container.appendChild(row);
+            }
+
+            function collectWatchFolders(page) {
+                var folders = [];
+                [].forEach.call(page.querySelectorAll('#libraryList .libraryRow'), function (row) {
+                    var chk = row.querySelector('.chkLibrary');
+                    if (chk.checked) {
+                        folders.push({
+                            Path: '',
+                            LibraryName: chk.getAttribute('data-name'),
+                            Kind: parseInt(row.querySelector('.kindSelect').value, 10)
+                        });
+                    }
+                });
+                [].forEach.call(page.querySelectorAll('#pathList .watchPathRow'), function (row) {
+                    var path = row.querySelector('.pathInput').value.trim();
+                    if (path.length > 0) {
+                        folders.push({
+                            Path: path,
+                            LibraryName: '',
+                            Kind: parseInt(row.querySelector('.kindSelect').value, 10)
+                        });
+                    }
+                });
+                return folders;
+            }
+
+            // ---------- Carga / guardado ----------
+            function splitLines(text) {
+                return (text || '').split('\n').map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s.length > 0; });
+            }
+
+            function splitSemi(text) {
+                return (text || '').split(';').map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s.length > 0; });
+            }
+
+            function loadConfig(page) {
+                ApiClient.getPluginConfiguration(MediaOrganizerConfig.pluginUniqueId).then(function (config) {
+                    page.querySelector('#chkEnabled').checked = config.Enabled;
+                    page.querySelector('#chkDryRun').checked = config.DryRun;
+
+                    var watched = config.WatchFolders || [];
+                    ApiClient.getJSON(ApiClient.getUrl('Library/VirtualFolders')).then(function (libraries) {
+                        renderLibraries(page.querySelector('#libraryList'), libraries, watched);
+                    }, function () {
+                        renderLibraries(page.querySelector('#libraryList'), [], watched);
+                    });
+
+                    var pathList = page.querySelector('#pathList');
+                    pathList.innerHTML = '';
+                    watched.filter(function (w) { return w.Path; }).forEach(function (w) {
+                        addPathRow(pathList, w.Path, w.Kind);
+                    });
+
+                    page.querySelector('#txtSeasonFormat').value = config.SeasonFolderFormat;
+                    page.querySelector('#txtEpisodeFormat').value = config.EpisodeFileFormat;
+                    page.querySelector('#txtMovieFormat').value = config.MovieNameFormat;
+                    page.querySelector('#numSettle').value = config.SettleSeconds;
+                    page.querySelector('#numMinSize').value = config.MinVideoSizeMb;
+                    page.querySelector('#chkDeleteJunk').checked = config.DeleteJunkFiles;
+                    page.querySelector('#chkDeleteNfo').checked = config.DeleteEpisodeNfo;
+                    page.querySelector('#chkDeletePosters').checked = config.DeleteEpisodePosters;
+                    page.querySelector('#chkKeepThumbs').checked = config.KeepThumbnails;
+                    page.querySelector('#chkKeepTrickplay').checked = config.KeepTrickplay;
+                    page.querySelector('#chkRenameSubs').checked = config.RenameSubtitles;
+                    page.querySelector('#chkQueueScan').checked = config.QueueLibraryScan;
+
+                    tagEditors.junkPatterns.setItems(splitLines(config.JunkFilePatterns));
+                    tagEditors.junkDirs.setItems(splitSemi(config.JunkDirectoryNames));
+                    tagEditors.stripPatterns.setItems(splitLines(config.StripPatterns));
+                    tagEditors.videoExt.setItems(config.VideoExtensions || []);
+                    tagEditors.subExt.setItems(config.SubtitleExtensions || []);
+                });
+            }
+
+            function initPage() {
+                var page = document.querySelector('#MediaOrganizerConfigPage');
+                initEditors();
+
+                page.querySelector('#btnAddPath').addEventListener('click', function () {
+                    addPathRow(page.querySelector('#pathList'), '', 0);
+                });
+
+                page.querySelector('#MediaOrganizerConfigForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    ApiClient.getPluginConfiguration(MediaOrganizerConfig.pluginUniqueId).then(function (config) {
+                        config.Enabled = page.querySelector('#chkEnabled').checked;
+                        config.DryRun = page.querySelector('#chkDryRun').checked;
+                        config.WatchFolders = collectWatchFolders(page);
+                        config.SeasonFolderFormat = page.querySelector('#txtSeasonFormat').value;
+                        config.EpisodeFileFormat = page.querySelector('#txtEpisodeFormat').value;
+                        config.MovieNameFormat = page.querySelector('#txtMovieFormat').value;
+                        config.SettleSeconds = parseInt(page.querySelector('#numSettle').value, 10) || 30;
+                        config.MinVideoSizeMb = parseInt(page.querySelector('#numMinSize').value, 10) || 0;
+                        config.DeleteJunkFiles = page.querySelector('#chkDeleteJunk').checked;
+                        config.DeleteEpisodeNfo = page.querySelector('#chkDeleteNfo').checked;
+                        config.DeleteEpisodePosters = page.querySelector('#chkDeletePosters').checked;
+                        config.KeepThumbnails = page.querySelector('#chkKeepThumbs').checked;
+                        config.KeepTrickplay = page.querySelector('#chkKeepTrickplay').checked;
+                        config.RenameSubtitles = page.querySelector('#chkRenameSubs').checked;
+                        config.QueueLibraryScan = page.querySelector('#chkQueueScan').checked;
+                        config.JunkFilePatterns = tagEditors.junkPatterns.getItems().join('\n');
+                        config.JunkDirectoryNames = tagEditors.junkDirs.getItems().join(';');
+                        config.StripPatterns = tagEditors.stripPatterns.getItems().join('\n');
+                        config.VideoExtensions = tagEditors.videoExt.getItems();
+                        config.SubtitleExtensions = tagEditors.subExt.getItems();
+
+                        ApiClient.updatePluginConfiguration(MediaOrganizerConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                    return false;
+                });
+
+                page.addEventListener('pageshow', function () {
+                    loadConfig(page);
+                });
+            }
+
+            initPage();
+        </script>
+    </div>
+</body>
+
+</html>
